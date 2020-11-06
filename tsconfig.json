@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "ES2020",
+    "target": "ES2020",
+    "sourceMap": true,
+    "inlineSources": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "strictBindCallApply": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true
+  },
+  "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "videos"
+  ]
+}

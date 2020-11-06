@@ -1,0 +1,22 @@
+{
+  "name": "ttv-adblock",
+  "version": "1.0.0",
+  "description": "",
+  "main": "twitch.js",
+  "scripts": {
+    "build": "rollup -c -m",
+    "watch": "rollup -c -m -w",
+    "copy-videos": "copyfiles videos dist/videos"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^6.1.0",
+    "@types/firefox-webext-browser": "^78.0.1",
+    "copyfiles": "^2.4.0",
+    "prettier": "^2.1.2",
+    "rollup": "^2.33.1",
+    "rollup-plugin-copy": "^3.3.0"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "manifest_version": 2,
+  "name": "TTV-Tools",
+  "version": "0.1.0",
+  "description": "Common helpers when watching twitch",
+  "background": {
+    "scripts": [
+      "twitch.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "run_at": "document_start",
+      "js": [
+        "content-script.js"
+      ],
+      "matches": [
+        "*://*.twitch.tv/*"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    "videos/*.ts",
+    "videos/*.m3u8",
+    "context-script.js",
+    "utilities-*.js"
+  ],
+  "permissions": [
+    "*://*.ttvnw.net/*",
+    "*://*.twitch.tv/*",
+    "webRequest",
+    "webRequestBlocking",
+    "tabs"
+  ]
+}
