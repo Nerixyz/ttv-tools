@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "TTV-Tools",
-  "version": "0.1.0",
+  "version": "0.2.7",
   "description": "Common helpers when watching twitch",
   "background": {
     "scripts": [
@@ -30,6 +30,10 @@
     "*://*.twitch.tv/*",
     "webRequest",
     "webRequestBlocking",
-    "tabs"
-  ]
+    "tabs",
+    "storage"
+  ],
+  "options_ui": {
+    "page": "options/options.html"
+  }
 }

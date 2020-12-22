@@ -1,5 +1,6 @@
 import { ReactConnector, ReactNode } from './react-connector';
 import { Lazy } from '../utilities';
+import { KeepBuffer, makeGetOption, MinLatencyReload, MinLatencySpeedup, Option } from '../options';
 
 export function getPlayer(connector: Lazy<ReactConnector>): TwitchPlayer | null {
   return connector().find('twitch-player', node => node.setPlayerActive && node.props?.mediaPlayerInstance);
@@ -47,11 +48,13 @@ export function initWorkerHandler(connector: Lazy<ReactConnector>) {
     if (typeof data !== 'object') return;
 
     if (data.type === 'PlayerAnalyticsEvent') {
-      const args: AnalyticsEventArgs = data.arg;
-      if (args.properties.hls_latency_broadcaster && args.properties.hls_latency_broadcaster > 2250) {
-        if (args.properties.hls_latency_broadcaster > 4500) resetPlayer(connector);
+      const args: AnalyticsEventArgs = {properties: {...data.arg.properties}};
+      if(args.properties.sink_buffer_size)
+        args.properties.sink_buffer_size *= 1000;
+      if (args.properties.sink_buffer_size && args.properties.sink_buffer_size > MinLatencySpeedup() * 1000) {
+        if (args.properties.sink_buffer_size > MinLatencyReload() * 1000) resetPlayer(connector);
         else {
-          const latencyToSkip = args.properties.hls_latency_broadcaster - 1500;
+          const latencyToSkip = args.properties.sink_buffer_size - (KeepBuffer() * 1000);
           const video = document.querySelector('video')!;
           video.playbackRate = 2;
           setTimeout(() => {
@@ -109,5 +112,6 @@ interface WorkerMessage {
 type AnalyticsEventArgs = {
   properties: {
     hls_latency_broadcaster?: number;
+    sink_buffer_size?: number;
   };
 };

@@ -4,7 +4,6 @@
     "target": "ES2020",
     "sourceMap": true,
     "inlineSources": true,
-    "outDir": "dist",
     "rootDir": "src",
     "strict": true,
     "strictBindCallApply": true,

@@ -26,6 +26,7 @@ export interface MessageMap {
     podPosition: number;
     podLength: number;
   };
+  localStorage: Record<string, string | number | boolean>;
 }
 
 export interface TwitchStitchedAdData {

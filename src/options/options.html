@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Options</title>
+  <link rel="stylesheet" href="options.css"/>
+  <script src="options.js"></script>
+</head>
+<body>
+<h1>TTV Tools</h1>
+<main class="options">
+  <div class="option">
+    User Agent
+    <div class="value">
+      <input aria-label="User Agent" id="user-agent"/>
+    </div>
+
+  </div>
+  <div class="option">
+    Min latency to reload
+    <div class="value">
+      <input aria-label="min latency to reload" type="range" id="min-latency-reload">
+      <span id="min-latency-reload-value"></span>
+    </div>
+  </div>
+  <div class="option">
+    Min latency to speed up
+    <div class="value">
+      <input aria-label="min latency to reload" type="range" id="min-latency-speedup">
+      <span id="min-latency-speedup-value"></span>
+    </div>
+  </div>
+  <div class="option">
+    Buffer length to keep
+    <div class="value">
+      <input aria-label="min latency to reload" type="range" id="keep-buffer">
+      <span id="keep-buffer-value"></span>
+    </div>
+  </div>
+  <div class="option">
+    Override Player
+    <div class="value">
+      <input aria-label="override player" type="checkbox" id="override-player">
+    </div>
+  </div>
+</main>
+</body>
+</html>

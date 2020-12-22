@@ -2,9 +2,9 @@ import { MessageMap } from '../types';
 import { initWorkerHandler, resetPlayer } from './twitch-player';
 import { lazy, throttle } from '../utilities';
 import { ReactConnector } from './react-connector';
+import { OverridePlayer } from '../options';
 
 const lazyConnector = lazy(() => new ReactConnector());
-
 
 window.addEventListener('message', async ({ data }) => {
   if (typeof data !== 'string' || !data.startsWith('ttv:')) return;
@@ -15,10 +15,11 @@ window.addEventListener('message', async ({ data }) => {
 
 window.addEventListener('playing', () => initWorkerHandler(lazyConnector), true);
 const throttledReset = throttle(() => resetPlayer(lazyConnector), 5 * 1000);
+
 async function handleAdPacket<K extends keyof MessageMap>(type: K, data: MessageMap[K]) {
   if (type !== 'adPod') return;
 
-  const { adId, creativeId, lineItemId, orderId, radToken, rollType, podLength } = data;
+  const { adId, creativeId, lineItemId, orderId, radToken, rollType, podLength } = data as MessageMap['adPod'];
 
   const baseData = {
     stitched: true,
@@ -28,7 +29,7 @@ async function handleAdPacket<K extends keyof MessageMap>(type: K, data: Message
     visible: true,
   };
 
-  for(let podPosition = 0; podPosition < podLength;podPosition++ ) {
+  for (let podPosition = 0; podPosition < podLength; podPosition++) {
     const extendedData = {
       ...baseData,
       ad_id: adId,
@@ -42,10 +43,12 @@ async function handleAdPacket<K extends keyof MessageMap>(type: K, data: Message
 
     await gqlRequest(makeGraphQlPacket('video_ad_impression', radToken, extendedData));
     for (let quartile = 0; quartile < 4; quartile++) {
-      await gqlRequest(makeGraphQlPacket('video_ad_quartile_complete', radToken, {
-        ...extendedData,
-        quartile: quartile + 1,
-      }));
+      await gqlRequest(
+        makeGraphQlPacket('video_ad_quartile_complete', radToken, {
+          ...extendedData,
+          quartile: quartile + 1,
+        })
+      );
     }
 
     await gqlRequest(makeGraphQlPacket('video_ad_pod_complete', radToken, baseData));
@@ -83,12 +86,13 @@ function gqlRequest(body: any) {
 }
 
 const knownCookies = new Map<string, string>();
+
 function getCookie(name: string): string {
   const known = knownCookies.get(name);
-  if(known) return known;
+  if (known) return known;
 
   const val = document.cookie.match(`${name}=([^;]+)`)?.[1];
-  if(val) knownCookies.set(name, val);
+  if (val) knownCookies.set(name, val);
 
   return val ?? '';
 }
@@ -96,7 +100,29 @@ function getCookie(name: string): string {
 function getHeaders() {
   return {
     'Client-Id': (window as any).commonOptions?.headers?.['Client-Id'],
-    'Authorization': `OAuth ${getCookie('auth-token')}`,
+    Authorization: `OAuth ${getCookie('auth-token')}`,
     'X-Device-Id': getCookie('unique_id'),
   };
 }
+
+(() => {
+  const baseFetch = window.fetch;
+  window.fetch = (url, init, ...args) => {
+    try {
+      if (typeof url === 'string' && OverridePlayer()) {
+        if (url.includes('/access_token')) {
+          url = url.replace('player_type=site', 'player_type=embed');
+        } else if (
+          url.includes('/gql') &&
+          typeof init?.body === 'string' &&
+          init.body.includes('PlaybackAccessToken')
+        ) {
+          const newBody = JSON.parse(init.body);
+          newBody.variables.playerType = 'embed';
+          init.body = JSON.stringify(newBody);
+        }
+      }
+    } catch {}
+    return baseFetch(url, init, ...args);
+  };
+})();

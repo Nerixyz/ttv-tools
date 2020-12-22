@@ -3,6 +3,7 @@ import { MessageMap, StreamFilter, TwitchStitchedAdData } from '../types';
 import { getSegmentsFromFile, ReplaceM3U8Task } from './replace-m3u8';
 import { lazyAsync } from '../utilities';
 import { parseAttributes } from './m3u8-utils';
+import { OverridePlayer, UserAgent } from '../options';
 
 const segments = lazyAsync(() => getSegmentsFromFile(browser.runtime.getURL('videos/video.m3u8')));
 const replaceTasks = new Map<string, [number, ReplaceM3U8Task]>();
@@ -46,9 +47,30 @@ function onRequest(request: _OnBeforeRequestDetails) {
 browser.webRequest.onBeforeRequest.addListener(
   onRequest,
   {
-    urls: ['*://*.ttvnw.net/v1/playlist/*']
+    urls: ['*://*.ttvnw.net/v1/playlist/*'],
   },
   ['blocking']
+);
+
+browser.webRequest.onBeforeSendHeaders.addListener(
+  ({ requestHeaders, url }) => {
+    const replaceHeader = (name: string, value: string | (() => string)) => {
+      const header = requestHeaders?.find(x => x.name.toLowerCase() === name);
+      if (header) header.value = (typeof value === 'function' ? value() : value) || header.value;
+    };
+
+    if(OverridePlayer() && url.includes('hls.ttvnw')) {
+      replaceHeader('origin', 'https://player.twitch.tv');
+      replaceHeader('referer', 'https://player.twitch.tv');
+    }
+    replaceHeader('User-Agent', UserAgent());
+
+    return { requestHeaders };
+  },
+  {
+    urls: ['*://*.ttvnw.net/*'],
+  },
+  ['requestHeaders', 'blocking']
 );
 
 function cleanupAllAdStuff(data: string) {
@@ -58,8 +80,8 @@ function cleanupAllAdStuff(data: string) {
       /X-TV-TWITCH-AD-CLICK-TRACKING-URL="[^"]+"/g,
       'X-TV-TWITCH-AD-CLICK-TRACKING-URL="javascript:alert(\'pogo\')"'
     )
-    .replace(/X-TV-TWITCH-AD-ADVERIFICATIONS="[^"]+"/g, `X-TV-TWITCH-AD-ADVERIFICATIONS="${ btoa('{}') }"`);
-  // return data.replace(/#EXT-X-DATERANGE.+CLASS=".*ad.*".+\n/g, '');
+    .replace(/X-TV-TWITCH-AD-ADVERIFICATIONS="[^"]+"/g, `X-TV-TWITCH-AD-ADVERIFICATIONS="${btoa('{}')}"`)
+    .replace(/#EXT-X-DATERANGE.+CLASS=".*ad.*".+\n/g, '');
 }
 
 function extractAdData(data: string) {
@@ -78,14 +100,18 @@ function extractAdData(data: string) {
     orderId: attr['X-TV-TWITCH-AD-ORDER-ID'],
     creativeId: attr['X-TV-TWITCH-AD-CREATIVE-ID'],
     adId: attr['X-TV-TWITCH-AD-ADVERTISER-ID'],
-    rollType: attr['X-TV-TWITCH-AD-ROLL-TYPE']
+    rollType: attr['X-TV-TWITCH-AD-ROLL-TYPE'],
   }).catch(console.error);
 }
 
 async function sendMessage<K extends keyof MessageMap>(type: K, data: MessageMap[K]) {
   const tabs = await browser.tabs.query({ url: ['*://*.twitch.tv/*'] });
-  return Promise.all(tabs.map(tab => browser.tabs.sendMessage(tab.id ?? -1, {
-    type,
-    data
-  })));
+  return Promise.all(
+    tabs.map(tab =>
+      browser.tabs.sendMessage(tab.id ?? -1, {
+        type,
+        data,
+      })
+    )
+  );
 }
