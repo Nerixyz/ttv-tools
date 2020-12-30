@@ -45,7 +45,7 @@ export function initWorkerHandler(connector: Lazy<ReactConnector>) {
   console.log('Listening on worker messages.');
 
   worker.addEventListener('message', ({ data }: { data: WorkerMessage }) => {
-    if (typeof data !== 'object') return;
+    if (typeof data !== 'object' || location.pathname.includes('videos/')) return;
 
     if (data.type === 'PlayerAnalyticsEvent') {
       const args: AnalyticsEventArgs = {properties: {...data.arg.properties}};
