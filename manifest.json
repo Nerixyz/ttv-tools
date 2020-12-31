@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
   "name": "TTV-Tools",
-  "version": "0.2.8",
+  "version": "0.3.0",
   "description": "Common helpers when watching twitch",
   "background": {
     "scripts": [
-      "twitch.js"
+      "background.js"
     ]
   },
   "content_scripts": [
@@ -31,9 +31,16 @@
     "webRequest",
     "webRequestBlocking",
     "tabs",
-    "storage"
+    "storage",
+    "cookies"
   ],
   "options_ui": {
     "page": "options/options.html"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{00006da7-e50e-4479-83ad-49d97b5ad39d}",
+      "strict_min_version": "80.0"
+    }
   }
 }

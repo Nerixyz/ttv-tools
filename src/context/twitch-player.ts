@@ -95,6 +95,7 @@ interface MediaPlayerCore {
   mediaSinkManager?: MediaSinkManager;
   getVolume(): number;
   isMuted(): boolean;
+  load(url: string, any: any): void;
 }
 
 interface MediaSinkManager {

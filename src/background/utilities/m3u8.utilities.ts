@@ -1,4 +1,4 @@
-import { DateRangeClass } from '../types';
+import { DateRangeClass } from '../../types';
 
 export function lastDateRangeIdx(data: string) {
     return data.lastIndexOf('#EXT-X-DATERANGE');

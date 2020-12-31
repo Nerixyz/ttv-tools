@@ -1,9 +1,11 @@
 import _OnBeforeRequestDetails = browser.webRequest._OnBeforeRequestDetails;
 import { MessageMap, StreamFilter, TwitchStitchedAdData } from '../types';
-import { getSegmentsFromFile, ReplaceM3U8Task } from './replace-m3u8';
+import { getSegmentsFromFile, ReplaceM3U8Task } from './utilities/replace-m3u8';
 import { lazyAsync } from '../utilities';
-import { parseAttributes } from './m3u8-utils';
+import { parseAttributes } from './utilities/m3u8.utilities';
 import { OverridePlayer, UserAgent } from '../options';
+import { onAdPod } from './ad.replacement';
+import { TWITCH_USER_PAGE } from './utilities/request.utilities';
 
 const segments = lazyAsync(() => getSegmentsFromFile(browser.runtime.getURL('videos/video.m3u8')));
 const replaceTasks = new Map<string, [number, ReplaceM3U8Task]>();
@@ -21,14 +23,15 @@ function onRequest(request: _OnBeforeRequestDetails) {
 
     if (adIdx === -1) {
       replaceTasks.delete(request.url);
-      return filter.write(event.data);
+      filter.write(event.data);
+      return;
     }
 
     const finalWrite = (data: string) => {
       filter.write(encoder.encode(data));
-      return filter.close();
+      filter.close();
     };
-    extractAdData(text);
+    extractAdData(text, request.documentUrl ?? '');
 
     if (!replaceTasks.has(request.url)) {
       replaceTasks.set(request.url, [-1, new ReplaceM3U8Task(await segments())]);
@@ -36,7 +39,7 @@ function onRequest(request: _OnBeforeRequestDetails) {
     const [timeout, task] = replaceTasks.get(request.url) ?? [];
     clearTimeout(timeout);
     setTimeout(() => replaceTasks.delete(request.url), 2000);
-    return finalWrite(cleanupAllAdStuff(task?.replaceWithVideo(text) ?? text));
+    finalWrite(cleanupAllAdStuff(task?.replaceWithVideo(text) ?? text));
   };
 
   filter.onstop = () => {
@@ -53,13 +56,26 @@ browser.webRequest.onBeforeRequest.addListener(
 );
 
 browser.webRequest.onBeforeSendHeaders.addListener(
-  ({ requestHeaders, url }) => {
+  ({ requestHeaders, url: requestUrl }) => {
+
+    if(requestUrl.includes('/api/channel/hls/')) {
+      const url = new URL(requestUrl);
+      const search = Object.fromEntries(url.searchParams.entries());
+      delete search.token;
+      delete search.sig;
+      delete search.p;
+      delete search.play_session_id;
+
+      browser.storage.local.set({usherData: search}).catch(console.error);
+    }
+
     const replaceHeader = (name: string, value: string | (() => string)) => {
+      if(!value) return;
       const header = requestHeaders?.find(x => x.name.toLowerCase() === name);
       if (header) header.value = (typeof value === 'function' ? value() : value) || header.value;
     };
 
-    if(OverridePlayer() && url.includes('hls.ttvnw')) {
+    if(OverridePlayer() && requestUrl.includes('hls.ttvnw')) {
       replaceHeader('origin', 'https://player.twitch.tv');
       replaceHeader('referer', 'https://player.twitch.tv');
     }
@@ -84,34 +100,14 @@ function cleanupAllAdStuff(data: string) {
     .replace(/#EXT-X-DATERANGE.+CLASS=".*ad.*".+\n/g, '');
 }
 
-function extractAdData(data: string) {
+function extractAdData(data: string, doc: string) {
   const attrString = data.match(/#EXT-X-DATERANGE:(ID="stitched-ad-[^\n]+)\n/)?.[1];
   if (!attrString) {
     console.warn('no stitched ad');
     return;
   }
+  if(!TWITCH_USER_PAGE.test(doc)) return;
 
   const attr = parseAttributes(attrString) as TwitchStitchedAdData;
-  sendMessage('adPod', {
-    podLength: Number(attr['X-TV-TWITCH-AD-POD-LENGTH'] ?? '1'),
-    podPosition: Number(attr['X-TV-TWITCH-AD-POD-POSITION'] ?? '0'),
-    radToken: attr['X-TV-TWITCH-AD-RADS-TOKEN'],
-    lineItemId: attr['X-TV-TWITCH-AD-LINE-ITEM-ID'],
-    orderId: attr['X-TV-TWITCH-AD-ORDER-ID'],
-    creativeId: attr['X-TV-TWITCH-AD-CREATIVE-ID'],
-    adId: attr['X-TV-TWITCH-AD-ADVERTISER-ID'],
-    rollType: attr['X-TV-TWITCH-AD-ROLL-TYPE'],
-  }).catch(console.error);
-}
-
-async function sendMessage<K extends keyof MessageMap>(type: K, data: MessageMap[K]) {
-  const tabs = await browser.tabs.query({ url: ['*://*.twitch.tv/*'] });
-  return Promise.all(
-    tabs.map(tab =>
-      browser.tabs.sendMessage(tab.id ?? -1, {
-        type,
-        data,
-      })
-    )
-  );
+  onAdPod(attr, TWITCH_USER_PAGE.exec(doc)?.[1] ?? '').then(() => console.debug('"Skipped" ad.')).catch(console.error);
 }

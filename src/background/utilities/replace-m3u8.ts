@@ -1,5 +1,5 @@
-import { firstDateRange, firstDateRangeIdx } from './m3u8-utils';
-import { DateRangeClass } from '../types';
+import { firstDateRange, firstDateRangeIdx } from './m3u8.utilities';
+import { DateRangeClass } from '../../types';
 
 export class ReplaceM3U8Task {
 

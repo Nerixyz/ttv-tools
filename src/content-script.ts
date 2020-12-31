@@ -23,4 +23,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     type: 'localStorage',
     data: await browser.storage.local.get(),
   })}`, window.location.origin);
-})
+});
+
+window.addEventListener('message', async ({data}) => {
+  if(typeof data !== 'string' || !data.startsWith('ttv:')) return;
+
+  const msg = JSON.parse(data.substring('ttv:'.length));
+  if(msg.type !== 'clientId') return;
+
+  await browser.storage.local.set({clientId: msg.data});
+});

@@ -16,17 +16,21 @@ export enum DateRangeClass {
 }
 
 export interface MessageMap {
-  adPod: {
-    lineItemId: string;
-    orderId: string;
-    creativeId: string;
-    adId: string;
-    radToken: string;
-    rollType: string;
-    podPosition: number;
-    podLength: number;
-  };
+  // adPod: AdPod;
   localStorage: Record<string, string | number | boolean>;
+  reloadPlayer: {};
+  updateUrl: {url: string};
+}
+
+export interface AdPod {
+  lineItemId: string;
+  orderId: string;
+  creativeId: string;
+  adId: string;
+  radToken: string;
+  rollType: string;
+  podPosition: number;
+  podLength: number;
 }
 
 export interface TwitchStitchedAdData {

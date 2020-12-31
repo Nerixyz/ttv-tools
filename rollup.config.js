@@ -4,7 +4,7 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 
 export default [
   {
-    input: ['src/background/twitch.ts', 'src/content-script.ts'],
+    input: ['src/background/background.ts', 'src/content-script.ts'],
     output: {
       dir: 'dist/build',
     },
