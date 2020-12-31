@@ -5,6 +5,7 @@
   "main": "twitch.js",
   "scripts": {
     "build": "rollup -c -m && npm run copy-videos && web-ext build -s dist/build -o -a dist",
+    "sign": "web-ext sign -s dist/build -a dist",
     "watch": "rollup -c -m -w",
     "copy-videos": "copyfiles videos/**/* dist/build"
   },
