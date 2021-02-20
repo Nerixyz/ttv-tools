@@ -4,7 +4,7 @@ import { getSegmentsFromFile, ReplaceM3U8Task } from './utilities/replace-m3u8';
 import { lazyAsync } from '../utilities';
 import { parseAttributes } from './utilities/m3u8.utilities';
 import { OverridePlayer, UserAgent } from '../options';
-import { onAdPod } from './ad.replacement';
+import { onAdPod, StreamTabs } from './ad.replacement';
 import { TWITCH_USER_PAGE } from './utilities/request.utilities';
 
 const segments = lazyAsync(() => getSegmentsFromFile(browser.runtime.getURL('videos/video.m3u8')));
@@ -31,7 +31,7 @@ function onRequest(request: _OnBeforeRequestDetails) {
       filter.write(encoder.encode(data));
       filter.close();
     };
-    extractAdData(text, request.documentUrl ?? '');
+    extractAdData(text, request.documentUrl ?? '', request.tabId);
 
     if (!replaceTasks.has(request.url)) {
       replaceTasks.set(request.url, [-1, new ReplaceM3U8Task(await segments())]);
@@ -56,7 +56,7 @@ browser.webRequest.onBeforeRequest.addListener(
 );
 
 browser.webRequest.onBeforeSendHeaders.addListener(
-  ({ requestHeaders, url: requestUrl }) => {
+  ({ requestHeaders, url: requestUrl,tabId }) => {
 
     if(requestUrl.includes('/api/channel/hls/')) {
       const url = new URL(requestUrl);
@@ -67,6 +67,8 @@ browser.webRequest.onBeforeSendHeaders.addListener(
       delete search.play_session_id;
 
       browser.storage.local.set({usherData: search}).catch(console.error);
+      // this is not xqcL
+      StreamTabs.set(tabId, requestUrl.match(/\/([^./]+).m3u8/)?.[1] ?? '');
     }
 
     const replaceHeader = (name: string, value: string | (() => string)) => {
@@ -100,7 +102,7 @@ function cleanupAllAdStuff(data: string) {
     .replace(/#EXT-X-DATERANGE.+CLASS=".*ad.*".+\n/g, '');
 }
 
-function extractAdData(data: string, doc: string) {
+function extractAdData(data: string, doc: string, tabId: number) {
   const attrString = data.match(/#EXT-X-DATERANGE:(ID="stitched-ad-[^\n]+)\n/)?.[1];
   if (!attrString) {
     console.warn('no stitched ad');
@@ -109,5 +111,5 @@ function extractAdData(data: string, doc: string) {
   if(!TWITCH_USER_PAGE.test(doc)) return;
 
   const attr = parseAttributes(attrString) as TwitchStitchedAdData;
-  onAdPod(attr, TWITCH_USER_PAGE.exec(doc)?.[1] ?? '').then(() => console.debug('"Skipped" ad.')).catch(console.error);
+  onAdPod(attr, StreamTabs.get(tabId) ?? TWITCH_USER_PAGE.exec(doc)?.[1] ?? '').then(() => console.debug('"Skipped" ad.')).catch(console.error);
 }

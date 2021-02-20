@@ -22,6 +22,14 @@ function makeGqlPacket(op: string, queryHash: string, variables: any) {
   };
 }
 
+function makeRawGqlPacket(op: string, query: string, variables: any) {
+  return {
+    operationName: `${op}_Template`,
+    query,
+    variables
+  };
+}
+
 function makeGraphQlAdPacket(event: string, radToken: string, payload: any) {
   return [
     makeGqlPacket(
@@ -71,8 +79,27 @@ export async function makeAdRequest({ adId, creativeId, lineItemId, orderId, rad
   }
 }
 
+const PLAYBACK_ACCESS_TOKEN_QUERY = `
+query PlaybackAccessToken_Template($login: String!, $isLive: Boolean!, $vodID: ID!, $isVod: Boolean!, $playerType: String!) {
+  streamPlaybackAccessToken(channelName: $login, params: {
+    platform: "web", playerBackend: "mediaplayer", playerType: $playerType
+  })
+  @include(if: $isLive) { 
+     value  
+     signature
+     __typename  
+  } 
+  videoPlaybackAccessToken(id: $vodID, params: { platform: "web", playerBackend: "mediaplayer", playerType: $playerType })
+   @include(if: $isVod) {
+       value
+       signature
+       __typename  
+  }
+}
+`.replace(/[\n\r]/g, '');
+
 export async function getPlayerAccessTokenRequest(login: string): Promise<{value: string, signature: string}> {
-  const res = await gqlRequest(makeGqlPacket('PlaybackAccessToken', '0828119ded1c13477966434e15800ff57ddacf13ba1911c129dc2200705b0712', {
+  const res = await gqlRequest(makeRawGqlPacket('PlaybackAccessToken', PLAYBACK_ACCESS_TOKEN_QUERY, {
     isLive: true,
     isVod: false,
     login: login,

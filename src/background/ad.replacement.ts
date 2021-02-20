@@ -49,3 +49,5 @@ async function createM3U8Url({usher, stream}: {usher: any, stream: string}) {
 function createRandomSessionId() {
   return [...Array(32)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
 }
+
+export const StreamTabs = new Map<number, string>();

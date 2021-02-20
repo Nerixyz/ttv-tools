@@ -36,8 +36,9 @@ export function resetPlayer(connector: Lazy<ReactConnector>) {
 }
 
 export function initWorkerHandler(connector: Lazy<ReactConnector>) {
-  const worker = getPlayer(connector)?.props?.mediaPlayerInstance?.core?.worker;
-  if (!worker) throw new Error('No worker');
+  const player = getPlayer(connector);
+  const worker = player?.props?.mediaPlayerInstance?.core?.worker;
+  if (!worker || !player) throw new Error('No worker/player');
 
   if (Reflect.get(worker, 'ad:known')) return;
   Reflect.set(worker, 'ad:known', true);
@@ -56,8 +57,18 @@ export function initWorkerHandler(connector: Lazy<ReactConnector>) {
         else {
           const latencyToSkip = args.properties.sink_buffer_size - (KeepBuffer() * 1000);
           const video = document.querySelector('video')!;
+
+          speedupPlayer(player!, 2);
+
           video.playbackRate = 2;
+          // this is dank but whatever... the worker will always try to get us to playbackRate=1
+          const skippa = () => {
+            if(video.playbackRate !== 2) video.playbackRate = 2;
+          }
+          video.addEventListener('ratechange', skippa);
           setTimeout(() => {
+            resetPlayerSpeed(player!, 1);
+            video.removeEventListener('ratechange', skippa);
             video.playbackRate = 1;
           }, latencyToSkip);
         }
@@ -67,6 +78,36 @@ export function initWorkerHandler(connector: Lazy<ReactConnector>) {
     }
   });
 }
+
+let skipPlaybackRateChange = false;
+function speedupPlayer(player: TwitchPlayer, rate: number) {
+  expectMonitor(player)?.setPlaybackRate?.(rate);
+  skipPlaybackRateChange = true;
+}
+function resetPlayerSpeed(player: TwitchPlayer, rate: number) {
+  skipPlaybackRateChange = false;
+  expectMonitor(player)?.setPlaybackRate?.(rate);
+}
+
+function expectMonitor(player: TwitchPlayer) {
+  const monitor = player.props?.mediaPlayerInstance?.core?.mediaSinkManager?.getCurrentSink?.().playbackMonitor;
+  if(!monitor) return;
+
+  overwriteMonitor(monitor);
+  return monitor;
+}
+
+function overwriteMonitor(monitor: PlaybackMonitor) {
+  if(!monitor.setPlaybackRate || monitor.setPlaybackRate.known) return;
+
+  const base = monitor.setPlaybackRate;
+  monitor.setPlaybackRate = function(...args) {
+    if(skipPlaybackRateChange) return;
+    base.apply(this, args);
+  };
+  monitor.setPlaybackRate.known = true;
+}
+
 
 interface TwitchPlayerState extends ReactNode {
   setSrc(options: { isNewMediaPlayerInstance: boolean }): void;
@@ -100,6 +141,15 @@ interface MediaPlayerCore {
 
 interface MediaSinkManager {
   video?: ExtendedVideo;
+  getCurrentSink?: () => MediaSink;
+}
+
+interface MediaSink {
+  playbackMonitor?: PlaybackMonitor
+}
+
+interface PlaybackMonitor {
+  setPlaybackRate?: ((rate: number) => void) & {known?: boolean};
 }
 
 type ExtendedVideo = HTMLVideoElement & { _ffz_compressor?: boolean; playsInline: boolean };
