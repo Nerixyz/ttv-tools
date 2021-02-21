@@ -3,31 +3,20 @@ import { getPlayer, initWorkerHandler, resetPlayer } from './twitch-player';
 import { lazy, throttle } from '../utilities';
 import { ReactConnector } from './react-connector';
 import { OverridePlayer } from '../options';
+import { ContextEventHandler } from 'beaverjs';
 
 const lazyConnector = lazy(() => new ReactConnector());
-
-window.addEventListener('message', async ({ data }) => {
-  if (typeof data !== 'string' || !data.startsWith('ttv:')) return;
-
-  const actualPacket = JSON.parse(data.substring('ttv:'.length));
-  await handleExtMessage(actualPacket.type, actualPacket.data);
-});
+const eventHandler = new ContextEventHandler<MessageMap>();
 
 window.addEventListener('playing', () => initWorkerHandler(lazyConnector), true);
 const throttledReset = throttle(() => resetPlayer(lazyConnector), 5 * 1000);
 
-async function handleExtMessage<K extends keyof MessageMap>(type: K, data: MessageMap[K]) {
-  switch (type) {
-    case 'updateUrl': await onUpdatePlayerUrl(data as MessageMap['updateUrl'])
-  }
-}
-
-async function onUpdatePlayerUrl(data: MessageMap['updateUrl']) {
+eventHandler.on('updateUrl', ({url}) => {
   const core = getPlayer(lazyConnector)?.props?.mediaPlayerInstance?.core;
   if(!core) return;
 
-  core.load(data.url, '');
-}
+  core.load(url, '');
+});
 
 (() => {
   const baseFetch = window.fetch;
@@ -52,5 +41,5 @@ async function onUpdatePlayerUrl(data: MessageMap['updateUrl']) {
 })();
 
 window.addEventListener('DOMContentLoaded', () => {
-  window.postMessage(`ttv:${JSON.stringify({type: 'clientId', data: (window as any).commonOptions.headers['Client-ID']})}`, location.origin);
-})
+  eventHandler.emitContent('clientId', (window as any).commonOptions.headers['Client-ID']);
+});

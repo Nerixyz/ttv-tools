@@ -1,6 +1,6 @@
 import { TwitchStitchedAdData } from '../types';
 import { getPlayerAccessTokenRequest, makeAdRequest } from './gql.requests';
-import { sendMessage } from './utilities/messaging';
+import { eventHandler } from './utilities/messaging';
 
 export async function onAdPod(stitchedAd: TwitchStitchedAdData, stream: string) {
   const adPod = {
@@ -30,7 +30,7 @@ export async function onAdPod(stitchedAd: TwitchStitchedAdData, stream: string) 
     }
   }
 
-  await sendMessage('updateUrl', {url: await createM3U8Url({stream, usher: usherData})});
+  eventHandler.emitContext('updateUrl',{url: await createM3U8Url({stream, usher: usherData})});
 }
 
 async function createM3U8Url({usher, stream}: {usher: any, stream: string}) {

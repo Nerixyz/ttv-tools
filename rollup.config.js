@@ -4,9 +4,9 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 
 export default [
   {
-    input: ['src/background/background.ts', 'src/content-script.ts'],
+    input: 'src/background/background.ts',
     output: {
-      dir: 'dist/build',
+      dir: 'dist/build'
     },
     plugins: [
       typescript({ tsconfig: 'tsconfig.json' }),
@@ -21,7 +21,14 @@ export default [
     output: {
       dir: 'dist/build',
     },
-    plugins: [typescript({ tsconfig: 'tsconfig.json' })],
+    plugins: [typescript({ tsconfig: 'tsconfig.json' }), nodeResolve({extensions: ['.js','.ts']}),],
+  },
+  {
+    input: 'src/content-script.ts',
+    output: {
+      dir: 'dist/build',
+    },
+    plugins: [typescript({ tsconfig: 'tsconfig.json' }), nodeResolve({extensions: ['.js','.ts']}),],
   },
   {
     input: 'src/options/options.ts',

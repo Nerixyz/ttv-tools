@@ -6,7 +6,6 @@ import { parseAttributes } from './utilities/m3u8.utilities';
 import { OverridePlayer, UserAgent } from '../options';
 import { onAdPod, StreamTabs } from './ad.replacement';
 import { TWITCH_USER_PAGE } from './utilities/request.utilities';
-
 const segments = lazyAsync(() => getSegmentsFromFile(browser.runtime.getURL('videos/video.m3u8')));
 const replaceTasks = new Map<string, [number, ReplaceM3U8Task]>();
 

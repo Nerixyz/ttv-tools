@@ -15,11 +15,12 @@ export enum DateRangeClass {
   AdQuartile = 'twitch-ad-quartile',
 }
 
-export interface MessageMap {
+export type MessageMap = {
   // adPod: AdPod;
   localStorage: Record<string, string | number | boolean>;
   reloadPlayer: {};
   updateUrl: {url: string};
+  clientId: string;
 }
 
 export interface AdPod {

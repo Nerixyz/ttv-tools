@@ -6,8 +6,6 @@ export class ReactConnector {
   protected known = new Map<string, ReactNode>();
   protected reactRoot: Lazy<ReactNode> = lazy(() => (document.querySelector('#root') as any)?._reactRootContainer?._internalRoot?.current);
 
-
-
   find<T extends ReactNode>(id: string, constraint: (node: ReactNodeMaybe<T>) => any, bypassCache = false): T | null {
     if(!bypassCache && this.known.has(id)) return this.known.get(id) as T;
     const found = this.findNode(this.reactRoot(), constraint);

@@ -1,6 +1,14 @@
-import { ReactConnector, ReactNode } from './react-connector';
+import { ReactConnector } from './react-connector';
 import { Lazy } from '../utilities';
-import { KeepBuffer, makeGetOption, MinLatencyReload, MinLatencySpeedup, Option } from '../options';
+import { KeepBuffer, MinLatencyReload, MinLatencySpeedup } from '../options';
+import {
+  AnalyticsEventArgs,
+  ExtendedVideo,
+  PlaybackMonitor,
+  TwitchPlayer,
+  TwitchPlayerState,
+  WorkerMessage
+} from './twitch-player.types';
 
 export function getPlayer(connector: Lazy<ReactConnector>): TwitchPlayer | null {
   return connector().find('twitch-player', node => node.setPlayerActive && node.props?.mediaPlayerInstance);
@@ -107,62 +115,3 @@ function overwriteMonitor(monitor: PlaybackMonitor) {
   };
   monitor.setPlaybackRate.known = true;
 }
-
-
-interface TwitchPlayerState extends ReactNode {
-  setSrc(options: { isNewMediaPlayerInstance: boolean }): void;
-  setInitialPlaybackSettings(opts: unknown): void;
-}
-
-interface TwitchPlayer extends ReactNode {
-  setPlayerActive: () => void;
-  props?: {
-    mediaPlayerInstance?: MediaPlayer;
-  };
-}
-
-interface MediaPlayer extends ReactNode {
-  core?: MediaPlayerCore;
-  attachHTMLVideoElement: (el: HTMLVideoElement) => void;
-  mediaSinkManager?: MediaSinkManager;
-  getVolume(): number;
-  setVolume(vol: number): void;
-  setMuted(mut: boolean): void;
-  isMuted(): boolean;
-}
-
-interface MediaPlayerCore {
-  worker: Worker;
-  mediaSinkManager?: MediaSinkManager;
-  getVolume(): number;
-  isMuted(): boolean;
-  load(url: string, any: any): void;
-}
-
-interface MediaSinkManager {
-  video?: ExtendedVideo;
-  getCurrentSink?: () => MediaSink;
-}
-
-interface MediaSink {
-  playbackMonitor?: PlaybackMonitor
-}
-
-interface PlaybackMonitor {
-  setPlaybackRate?: ((rate: number) => void) & {known?: boolean};
-}
-
-type ExtendedVideo = HTMLVideoElement & { _ffz_compressor?: boolean; playsInline: boolean };
-
-interface WorkerMessage {
-  type: string | number;
-  id: number;
-  arg: any;
-}
-
-type AnalyticsEventArgs = {
-  properties: {
-    hls_latency_broadcaster?: number;
-    sink_buffer_size?: number;
-  };
-};
