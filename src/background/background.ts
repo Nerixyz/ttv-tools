@@ -101,5 +101,8 @@ function extractAdData(data: string, doc: string, tabId: number) {
   if(!TWITCH_USER_PAGE.test(doc)) return;
 
   const attr = parseAttributes(attrString) as TwitchStitchedAdData;
-  onAdPod(attr, StreamTabs.get(tabId) ?? TWITCH_USER_PAGE.exec(doc)?.[1] ?? '').then(() => console.debug('"Skipped" ad.')).catch(console.error);
+  onAdPod(attr, StreamTabs.get(tabId) ?? TWITCH_USER_PAGE.exec(doc)?.[1] ?? '').then(() => {
+    eventHandler.emitContext('adSkipped', {});
+    console.debug('"Skipped" ad.');
+  }).catch(console.error);
 }

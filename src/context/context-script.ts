@@ -16,7 +16,21 @@ eventHandler.on('updateUrl', ({url}) => {
   if(!core) return;
 
   core.load(url, '');
+  signalPlayer('blue');
 });
+
+eventHandler.on('adSkipped', () => signalPlayer('red'));
+
+function signalPlayer(color: string) {
+  const player = document.querySelector('.video-player__overlay');
+  if(!player) return;
+
+  player.animate({
+    composite: 'replace',
+    easing: 'ease-in',
+    boxShadow: [`inset 0 0 30px ${color}`, 'inset 0 0 30px transparent'],
+  }, 1000);
+}
 
 (() => {
   const baseFetch = window.fetch;

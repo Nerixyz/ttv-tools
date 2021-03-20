@@ -21,6 +21,7 @@ export type MessageMap = {
   reloadPlayer: {};
   updateUrl: {url: string};
   clientId: string;
+  adSkipped: {};
 }
 
 export interface AdPod {
