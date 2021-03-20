@@ -88,7 +88,8 @@ function cleanupAllAdStuff(data: string) {
       'X-TV-TWITCH-AD-CLICK-TRACKING-URL="javascript:alert(\'pogo\')"'
     )
     .replace(/X-TV-TWITCH-AD-ADVERIFICATIONS="[^"]+"/g, `X-TV-TWITCH-AD-ADVERIFICATIONS="${btoa('{}')}"`)
-    .replace(/#EXT-X-DATERANGE.+CLASS=".*ad.*".+\n/g, '');
+    .replace(/#EXT-X-DATERANGE.+CLASS=".*ad.*".+\n/g, '')
+    .replace(/\n#EXTINF.+(?<!live)\nhttps:.+/g, '');
 }
 
 function extractAdData(data: string, doc: string, tabId: number) {
