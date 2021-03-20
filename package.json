@@ -4,10 +4,9 @@
   "description": "",
   "main": "twitch.js",
   "scripts": {
-    "build": "rollup -c -m && npm run copy-videos && web-ext build -s dist/build -o -a dist",
+    "build": "rollup -c -m && web-ext build -s dist/build -o -a dist",
     "sign": "web-ext sign -s dist/build -a dist",
-    "watch": "rollup -c -m -w",
-    "copy-videos": "copyfiles videos/**/* dist/build"
+    "watch": "rollup -c -m -w"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +18,6 @@
     "@rollup/plugin-node-resolve": "^10.0.0",
     "@rollup/plugin-typescript": "^6.1.0",
     "@types/firefox-webext-browser": "^78.0.1",
-    "copyfiles": "^2.4.0",
     "prettier": "^2.1.2",
     "rollup": "^2.33.1",
     "rollup-plugin-copy": "^3.3.0",
