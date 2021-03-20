@@ -1,25 +1,3 @@
-import { DateRangeClass } from '../../types';
-
-export function lastDateRangeIdx(data: string) {
-    return data.lastIndexOf('#EXT-X-DATERANGE');
-}
-
-export function lastDateRange(data: string): DateRangeClass {
-    const idxData = lastDateRangeIdx(data);
-
-    return data.substring(idxData).match(/CLASS="([\w-]+)"/)?.[1] as DateRangeClass;
-}
-
-export function firstDateRangeIdx(data: string) {
-    return data.indexOf('#EXT-X-DATERANGE');
-}
-
-export function firstDateRange(data: string): DateRangeClass {
-    const idxData = firstDateRangeIdx(data);
-
-    return data.substring(idxData).match(/CLASS="([\w-]+)"/)?.[1] as DateRangeClass;
-}
-
 export function parseM3u8(content: string) {
     const data = [];
     const lines = content.split('\n').filter(Boolean);
@@ -42,7 +20,7 @@ export function parseM3u8(content: string) {
 export function parseAttributes(str: string) {
     return Object.fromEntries(
       str
-        .split(/(?:^|,)((?:[^=]*)=(?:"[^"]*"|[^,]*))/)
+        .split(/(?:^|,)([^=]*=(?:"[^"]*"|[^,]*))/)
         .filter(Boolean)
         .map(x => {
             const idx = x.indexOf('=');

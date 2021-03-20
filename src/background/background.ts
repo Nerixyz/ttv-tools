@@ -1,13 +1,10 @@
 import _OnBeforeRequestDetails = browser.webRequest._OnBeforeRequestDetails;
-import { MessageMap, StreamFilter, TwitchStitchedAdData } from '../types';
-import { getSegmentsFromFile, ReplaceM3U8Task } from './utilities/replace-m3u8';
-import { lazyAsync } from '../utilities';
+import { StreamFilter, TwitchStitchedAdData } from '../types';
 import { parseAttributes } from './utilities/m3u8.utilities';
 import { OverridePlayer, UserAgent } from '../options';
 import { onAdPod, StreamTabs } from './ad.replacement';
 import { TWITCH_USER_PAGE } from './utilities/request.utilities';
-const segments = lazyAsync(() => getSegmentsFromFile(browser.runtime.getURL('videos/video.m3u8')));
-const replaceTasks = new Map<string, [number, ReplaceM3U8Task]>();
+import { eventHandler } from './utilities/messaging';
 
 function onRequest(request: _OnBeforeRequestDetails) {
   if (!request.url.includes('video-weaver')) return;
@@ -21,7 +18,6 @@ function onRequest(request: _OnBeforeRequestDetails) {
     const adIdx = text.indexOf('#EXT-X-DATERANGE:ID="stitched-ad');
 
     if (adIdx === -1) {
-      replaceTasks.delete(request.url);
       filter.write(event.data);
       return;
     }
@@ -32,13 +28,7 @@ function onRequest(request: _OnBeforeRequestDetails) {
     };
     extractAdData(text, request.documentUrl ?? '', request.tabId);
 
-    if (!replaceTasks.has(request.url)) {
-      replaceTasks.set(request.url, [-1, new ReplaceM3U8Task(await segments())]);
-    }
-    const [timeout, task] = replaceTasks.get(request.url) ?? [];
-    clearTimeout(timeout);
-    setTimeout(() => replaceTasks.delete(request.url), 2000);
-    finalWrite(cleanupAllAdStuff(task?.replaceWithVideo(text) ?? text));
+    finalWrite(cleanupAllAdStuff(text));
   };
 
   filter.onstop = () => {
