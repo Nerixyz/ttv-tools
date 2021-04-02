@@ -18,6 +18,7 @@ Downloads can be found on the [releases-page](https://github.com/Nerixyz/ttv-too
 * Add tests for ad-skipping/-matching
 * Provide better feedback
 * Possibly parse playlist
+* Investigate [swc](https://swc.rs/) for faster compilation (blocking: [#657](https://github.com/swc-project/swc/issues/657))
 
 # Set-Up
 
