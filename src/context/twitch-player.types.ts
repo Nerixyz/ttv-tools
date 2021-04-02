@@ -28,6 +28,7 @@ export interface MediaPlayerCore {
   getVolume(): number;
   isMuted(): boolean;
   load(url: string, any: any): void;
+  getPath(): string;
 }
 
 export interface MediaSinkManager {

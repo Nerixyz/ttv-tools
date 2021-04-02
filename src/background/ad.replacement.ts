@@ -30,7 +30,7 @@ export async function onAdPod(stitchedAd: TwitchStitchedAdData, stream: string) 
     }
   }
 
-  eventHandler.emitContext('updateUrl',{url: await createM3U8Url({stream, usher: usherData})});
+  eventHandler.emitContext('updateUrl',{url: await createM3U8Url({stream, usher: usherData}), stream});
 }
 
 async function createM3U8Url({usher, stream}: {usher: any, stream: string}) {
