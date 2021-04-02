@@ -1,6 +1,6 @@
 # ttv-tools
 
-This Firefox extension bundles common function when watching twitch. It only works with Firefox.
+This Firefox extension bundles common functionalities enhancing the Twitch experience. It only works with Firefox (due to Safari and Chrome not supporting [`browser.webRequest.filterResponseData`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/webRequest/filterResponseData)).
 These functions include:
 
 * Ad skipping (skip ads and reload the player)
@@ -9,11 +9,20 @@ These functions include:
 
 # Installing
 
+This extension _isn't_ on `addons.mozilla.org`, you'll need to download it yourself.
 Downloads can be found on the [releases-page](https://github.com/Nerixyz/ttv-tools/releases).
+
+# TODO
+
+* Settings-Panel on the player
+* Add tests for ad-skipping/-matching
+* Provide better feedback
+* Possibly parse playlist
+* Investigate [`swc`/`spack`](https://swc.rs/) for faster compilation (blocking: [#1438](https://github.com/swc-project/swc/issues/1438))
 
 # Set-Up
 
-You'll need to build the extension for yourself.
+You may build the extension for yourself.
 * Install the dependencies: `npm i`
 * Build the extension: `npm run build`
 

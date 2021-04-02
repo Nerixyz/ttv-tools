@@ -9,6 +9,7 @@ import { eventHandler } from './utilities/messaging';
 function onRequest(request: _OnBeforeRequestDetails) {
   if (!request.url.includes('video-weaver')) return;
 
+  const start = performance.now();
   const filter = browser.webRequest.filterResponseData(request.requestId) as StreamFilter;
   const decoder = new TextDecoder('utf-8');
   const encoder = new TextEncoder();
@@ -32,6 +33,7 @@ function onRequest(request: _OnBeforeRequestDetails) {
   };
 
   filter.onstop = () => {
+    const elapsed = performance.now() - start; // keep for debugging
     filter.disconnect();
   };
 }
