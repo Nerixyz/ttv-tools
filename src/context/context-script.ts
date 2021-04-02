@@ -18,7 +18,7 @@ eventHandler.on('updateUrl', ({url, stream}) => {
   const path = core.getPath();
   if(url === path) return; // same url
 
-  const user = path.match(/\/channel\/hls\/([^.]).m3u8/)?.[1];
+  const user = path.match(/\/channel\/hls\/([^.]+).m3u8/)?.[1];
   if(!user) {
     console.warn('Attempted to reload but got a bad path:', path);
     return;
