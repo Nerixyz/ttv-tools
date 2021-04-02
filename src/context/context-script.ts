@@ -11,9 +11,19 @@ const eventHandler = new ContextEventHandler<MessageMap>();
 window.addEventListener('playing', () => initWorkerHandler(lazyConnector), true);
 const throttledReset = throttle(() => resetPlayer(lazyConnector), 5 * 1000);
 
-eventHandler.on('updateUrl', ({url}) => {
+eventHandler.on('updateUrl', ({url, stream}) => {
   const core = getPlayer(lazyConnector)?.props?.mediaPlayerInstance?.core;
   if(!core) return;
+
+  const path = core.getPath();
+  if(url === path) return; // same url
+
+  const user = path.match(/\/channel\/hls\/([^.]).m3u8/)?.[1];
+  if(!user) {
+    console.warn('Attempted to reload but got a bad path:', path);
+    return;
+  }
+  if(user !== stream) return; // other stream -- invalid
 
   core.load(url, '');
   signalPlayer('blue');

@@ -19,7 +19,7 @@ export type MessageMap = {
   // adPod: AdPod;
   localStorage: Record<string, string | number | boolean>;
   reloadPlayer: {};
-  updateUrl: {url: string};
+  updateUrl: {url: string, stream: string};
   clientId: string;
   adSkipped: {};
 }
