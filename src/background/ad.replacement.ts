@@ -1,4 +1,4 @@
-import { TwitchStitchedAdData } from '../types';
+import { TwitchStitchedAdData } from './twitch-m3u8.types';
 import { getPlayerAccessTokenRequest, makeAdRequest } from './gql.requests';
 import { eventHandler } from './utilities/messaging';
 
@@ -12,6 +12,7 @@ export async function onAdPod(stitchedAd: TwitchStitchedAdData, stream: string) 
     creativeId: stitchedAd['X-TV-TWITCH-AD-CREATIVE-ID'],
     adId: stitchedAd['X-TV-TWITCH-AD-ADVERTISER-ID'],
     rollType: stitchedAd['X-TV-TWITCH-AD-ROLL-TYPE'],
+    duration: Math.round(stitchedAd.DURATION ?? 30),
   };
   await makeAdRequest(adPod);
 

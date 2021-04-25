@@ -44,7 +44,7 @@ function makeGraphQlAdPacket(event: string, radToken: string, payload: any) {
   ];
 }
 
-export async function makeAdRequest({ adId, creativeId, lineItemId, orderId, radToken, rollType, podLength }: AdPod) {
+export async function makeAdRequest({ adId, creativeId, lineItemId, orderId, radToken, rollType, podLength, duration }: AdPod) {
   const baseData = {
     stitched: true,
     roll_type: rollType,
@@ -58,7 +58,7 @@ export async function makeAdRequest({ adId, creativeId, lineItemId, orderId, rad
       ...baseData,
       ad_id: adId,
       ad_position: podPosition,
-      duration: 30,
+      duration,
       creative_id: creativeId,
       total_ads: podLength,
       order_id: orderId,
@@ -66,6 +66,7 @@ export async function makeAdRequest({ adId, creativeId, lineItemId, orderId, rad
     };
 
     await gqlRequest(makeGraphQlAdPacket('video_ad_impression', radToken, extendedData));
+
     for (let quartile = 0; quartile < 4; quartile++) {
       await gqlRequest(
         makeGraphQlAdPacket('video_ad_quartile_complete', radToken, {
@@ -102,7 +103,7 @@ export async function getPlayerAccessTokenRequest(login: string): Promise<{value
   const res = await gqlRequest(makeRawGqlPacket('PlaybackAccessToken', PLAYBACK_ACCESS_TOKEN_QUERY, {
     isLive: true,
     isVod: false,
-    login: login,
+    login,
     playerType: 'site',
     vodID: ''
   })).then(x => x.json());
