@@ -1,8 +1,11 @@
 export async function makeGqlHeaders() {
+  const auth = await getCookie('auth-token');
   return {
     'Client-Id': await getClientId(),
-    Authorization: `OAuth ${await getCookie('auth-token')}`,
     'X-Device-Id': await getCookie('unique_id') ?? 'PogO',
+    ...(auth && {
+      'Authorization': `OAuth ${auth}`,
+    })
   }
 }
 
