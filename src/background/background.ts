@@ -1,10 +1,11 @@
 import _OnBeforeRequestDetails = browser.webRequest._OnBeforeRequestDetails;
-import { StreamFilter, TwitchStitchedAdData } from '../types';
+import { StreamFilter } from '../types';
 import { parseAttributes } from './utilities/m3u8.utilities';
 import { OverridePlayer, UserAgent } from '../options';
 import { onAdPod, StreamTabs } from './ad.replacement';
 import { TWITCH_USER_PAGE } from './utilities/request.utilities';
 import { eventHandler } from './utilities/messaging';
+import { TwitchStitchedAdData } from './twitch-m3u8.types';
 
 function onRequest(request: _OnBeforeRequestDetails) {
   if (!request.url.includes('video-weaver')) return;
@@ -102,7 +103,7 @@ function extractAdData(data: string, doc: string, tabId: number) {
   }
   if(!TWITCH_USER_PAGE.test(doc)) return;
 
-  const attr = parseAttributes(attrString) as TwitchStitchedAdData;
+  const attr = parseAttributes<TwitchStitchedAdData>(attrString);
   onAdPod(attr, StreamTabs.get(tabId) ?? TWITCH_USER_PAGE.exec(doc)?.[1] ?? '').then(() => {
     eventHandler.emitContext('adSkipped', {});
     console.debug('"Skipped" ad.');
