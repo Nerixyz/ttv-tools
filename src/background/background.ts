@@ -6,6 +6,9 @@ import { onAdPod, StreamTabs } from './ad.replacement';
 import { TWITCH_USER_PAGE } from './utilities/request.utilities';
 import { eventHandler } from './utilities/messaging';
 import { TwitchStitchedAdData } from './twitch-m3u8.types';
+import { parseMediaPlaylist } from './hls/hls-parser';
+import { writePlaylist } from './hls/hls-writer';
+import { mergePlayer } from './player-merging';
 
 function onRequest(request: _OnBeforeRequestDetails) {
   if (!request.url.includes('video-weaver')) return;
@@ -17,9 +20,9 @@ function onRequest(request: _OnBeforeRequestDetails) {
 
   filter.ondata = async (event: { data: ArrayBuffer }) => {
     const text = decoder.decode(event.data);
-    const adIdx = text.indexOf('#EXT-X-DATERANGE:ID="stitched-ad');
+    const hasAds = text.match(/^#EXTINF:\d+\.?\d*,[^live]+$/m);
 
-    if (adIdx === -1) {
+    if (!hasAds) {
       filter.write(event.data);
       return;
     }
@@ -28,9 +31,9 @@ function onRequest(request: _OnBeforeRequestDetails) {
       filter.write(encoder.encode(data));
       filter.close();
     };
-    extractAdData(text, request.documentUrl ?? '', request.tabId);
 
-    finalWrite(cleanupAllAdStuff(text));
+    extractAdData(text, request.documentUrl ?? '', request.tabId);
+    finalWrite(await mergePlayer(request.tabId, text));
   };
 
   filter.onstop = () => {
