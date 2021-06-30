@@ -1,6 +1,7 @@
 import { TwitchStitchedAdData } from './twitch-m3u8.types';
-import { getPlayerAccessTokenRequest, makeAdRequest } from './gql.requests';
+import { getPlayerAccessTokenRequest, makeAdRequest, PlayerType } from './gql.requests';
 import { eventHandler } from './utilities/messaging';
+import { getUsherData } from './storage';
 
 export async function onAdPod(stitchedAd: TwitchStitchedAdData, stream: string) {
   const adPod = {
@@ -16,26 +17,11 @@ export async function onAdPod(stitchedAd: TwitchStitchedAdData, stream: string) 
   };
   await makeAdRequest(adPod);
 
-  let {usherData} = await browser.storage.local.get('usherData');
-  if(!usherData) {
-    console.warn('No usherData pogo, replacing');
-    usherData = {
-      allow_source: "true",
-      fast_bread: "true",
-      player_backend: "mediaplayer",
-      playlist_include_framerate: "true",
-      reassignments_supported: "true",
-      supported_codecs: "avc1",
-      cdm: "wv",
-      player_version: "1.2.0"
-    }
-  }
-
-  eventHandler.emitContext('updateUrl',{url: await createM3U8Url({stream, usher: usherData}), stream});
+  eventHandler.emitContext('updateUrl',{url: await createM3U8Url({stream, usher: await getUsherData()}), stream});
 }
 
-async function createM3U8Url({usher, stream}: {usher: any, stream: string}) {
-  const {value: token, signature: sig} = await getPlayerAccessTokenRequest(stream);
+export async function createM3U8Url({usher, stream}: {usher: any, stream: string}, playerType = PlayerType.Site) {
+  const {value: token, signature: sig} = await getPlayerAccessTokenRequest(stream, playerType);
 
   const search = new URLSearchParams({
     ...usher,

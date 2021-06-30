@@ -99,12 +99,12 @@ query PlaybackAccessToken_Template($login: String!, $isLive: Boolean!, $vodID: I
 }
 `.replace(/[\n\r]/g, '');
 
-export async function getPlayerAccessTokenRequest(login: string): Promise<{value: string, signature: string}> {
+export async function getPlayerAccessTokenRequest(login: string, playerType = PlayerType.Site): Promise<{value: string, signature: string}> {
   const res = await gqlRequest(makeRawGqlPacket('PlaybackAccessToken', PLAYBACK_ACCESS_TOKEN_QUERY, {
     isLive: true,
     isVod: false,
     login,
-    playerType: 'site',
+    playerType,
     vodID: ''
   })).then(x => x.json());
   const accessToken = res?.data?.streamPlaybackAccessToken;
@@ -112,4 +112,42 @@ export async function getPlayerAccessTokenRequest(login: string): Promise<{value
 
   delete accessToken.__typename;
   return accessToken;
+}
+
+export enum PlayerType {
+  AmazonLive = 'amazon_live',
+  AmazonProductPage = 'amazon_product_page',
+  AmazonVse = 'amazon_vse_test',
+  AnimatedThumbnails = 'animated_thumbnails',
+  ChannelTrailer = 'channel_trailer',
+  ClipsEditing = 'clips-editing',
+  ClipsEmbed = 'clips-embed',
+  ClipsViewing = 'clips-viewing',
+  ClipsWatchPage = 'clips-watch',
+  Creative = 'creative',
+  Curse = 'curse',
+  Dashboard = 'dashboard',
+  VideoProducerModal = 'video_producer_modal',
+  Embed = 'embed',
+  Facebook = 'facebook',
+  Feed = 'feed',
+  Frontpage = 'frontpage',
+  Highlighter = 'highlighter',
+  Imdb = 'imdb',
+  MultiviewPrimary = 'multiview-primary',
+  MultiviewSecondary = 'multiview-secondary',
+  Onboarding = 'onboarding',
+  PictureByPicture = 'picture-by-picture',
+  Popout = 'popout',
+  Pulse = 'pulse',
+  Site = 'site',
+  Thunderdome = 'thunderdome',
+  ChannelHomeCarousel = 'channel_home_carousel',
+  ChannelHomeLive = 'channel_home_live',
+  SiteMini = 'site_mini',
+  SquadPrimary = 'squad_primary',
+  SquadSecondary = 'squad_secondary',
+  TwitchEverywhere = 'twitch_everywhere',
+  WatchPartyHost = 'watch_party_host',
+  PopTart = 'pop_tart'
 }
