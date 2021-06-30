@@ -30,10 +30,16 @@ export async function mergePlayer(tabId: number, raw: string): Promise<string> {
     }
 
     const refRaw = await fetch(playlistUrls.get(tabId)!).then(x => x.text());
-    
+
     try {
-        const merged = mergePlaylists(parseMediaPlaylist(raw), parseMediaPlaylist(refRaw));
-        return writePlaylist(merged);
+        const rawP = parseMediaPlaylist(raw);
+        // const refRawP = parseMediaPlaylist(refRaw);
+        // const merged = mergePlaylists(rawP, refRawP);
+        if (rawP.segments.find(x => x.dateTime && x.dateTime.date > new Date())?.segmentInfo?.title !== 'live') {
+            return refRaw;
+        } else {
+            return raw;
+        }
     } catch (e) {
         console.error(e);
         return raw;
