@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "TTV-Tools",
-  "version": "0.5.2",
+  "version": "0.5.4",
   "description": "Common helpers when watching twitch",
   "background": {
     "scripts": [

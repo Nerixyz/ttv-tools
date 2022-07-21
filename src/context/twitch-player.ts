@@ -50,6 +50,7 @@ export function initWorkerHandler(connector: Lazy<ReactConnector>) {
 
   if (Reflect.get(worker, 'ad:known')) return;
   Reflect.set(worker, 'ad:known', true);
+  initNoFfwd();
 
   console.log('Listening on worker messages.');
 
@@ -60,7 +61,7 @@ export function initWorkerHandler(connector: Lazy<ReactConnector>) {
       const args: AnalyticsEventArgs = {properties: {...data.arg.properties}};
       if(args.properties.sink_buffer_size)
         args.properties.sink_buffer_size *= 1000;
-      if (args.properties.sink_buffer_size && args.properties.sink_buffer_size > MinLatencySpeedup() * 1000) {
+      if (!isNoFfwd() && args.properties.sink_buffer_size && args.properties.sink_buffer_size > MinLatencySpeedup() * 1000) {
         if (args.properties.sink_buffer_size > MinLatencyReload() * 1000) resetPlayer(connector);
         else {
           const latencyToSkip = args.properties.sink_buffer_size - (KeepBuffer() * 1000);
@@ -114,4 +115,12 @@ function overwriteMonitor(monitor: PlaybackMonitor) {
     base.apply(this, args);
   };
   monitor.setPlaybackRate.known = true;
+}
+
+function initNoFfwd() {
+  (globalThis as any).__noFfwd ??= false;
+}
+
+function isNoFfwd() {
+  return !!(globalThis as any).__noFfwd;
 }
