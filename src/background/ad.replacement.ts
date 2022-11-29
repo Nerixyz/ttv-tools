@@ -17,7 +17,7 @@ export async function onAdPod(stitchedAd: TwitchStitchedAdData, stream: string) 
   };
   await makeAdRequest(adPod);
 
-  eventHandler.emitContext('updateUrl',{url: await createM3U8Url({stream, usher: await getUsherData()}), stream});
+  //eventHandler.emitContext('updateUrl',{url: await createM3U8Url({stream, usher: await getUsherData()}), stream});
 }
 
 export async function createM3U8Url({usher, stream}: {usher: any, stream: string}, playerType = PlayerType.Site) {
