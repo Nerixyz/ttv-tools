@@ -6,10 +6,6 @@ import { onAdPod, StreamTabs } from './ad.replacement';
 import { TWITCH_USER_PAGE } from './utilities/request.utilities';
 import { eventHandler } from './utilities/messaging';
 import { TwitchStitchedAdData } from './twitch-m3u8.types';
-import { parseMediaPlaylist } from './hls/hls-parser';
-import { writePlaylist } from './hls/hls-writer';
-import { mergePlayer } from './player-merging';
-
 function onRequest(request: _OnBeforeRequestDetails) {
   if (!request.url.includes('video-weaver')) return;
 
@@ -33,7 +29,7 @@ function onRequest(request: _OnBeforeRequestDetails) {
     };
 
     extractAdData(text, request.documentUrl ?? '', request.tabId);
-    finalWrite(await mergePlayer(request.tabId, text));
+    finalWrite(cleanupAllAdStuff(text));
   };
 
   filter.onstop = () => {
@@ -94,8 +90,7 @@ function cleanupAllAdStuff(data: string) {
       'X-TV-TWITCH-AD-CLICK-TRACKING-URL="javascript:alert(\'pogo\')"'
     )
     .replace(/X-TV-TWITCH-AD-ADVERIFICATIONS="[^"]+"/g, `X-TV-TWITCH-AD-ADVERIFICATIONS="${btoa('{}')}"`)
-    .replace(/#EXT-X-DATERANGE.+CLASS=".*ad.*".+\n/g, '')
-    .replace(/\n#EXTINF.+(?<!live)\nhttps:.+/g, '');
+    .replace(/#EXT-X-DATERANGE.+CLASS=".*ad.*".+\n/g, '');
 }
 
 function extractAdData(data: string, doc: string, tabId: number) {
